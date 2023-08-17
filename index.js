@@ -15,14 +15,26 @@ const db = new sqlite3.Database('./database.db');
 
 // Function to generate a short code
 function generateShortCode() {
-    return nanoid(8); // Generate a random string of length 8
+  return nanoid(8); // Generate a random string of length 8
 }
 
+app.get('/getAllUrls', (req, res) => {
+  const selectQuery = `SELECT * FROM urls`; // Select all rows from the 'urls' table
+  db.all(selectQuery, (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to retrieve data from database' });
+    }
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ error: 'No data found' });
+    }
+    res.json(rows); // Send the rows as a JSON response
+  });
+});
 
 app.post('/shorten', (req, res) => {
   const originalUrl = req.body.originalUrl;
   const shortCode = generateShortCode();
-  
+
   const insertQuery = `INSERT INTO urls (originalUrl, shortCode) VALUES (?, ?)`;
   db.run(insertQuery, [originalUrl, shortCode], async (err) => {
     if (err) {
@@ -50,7 +62,7 @@ app.get('/:shortCode', (req, res) => {
         console.error('Error updating click count:', err);
       }
     });
-    
+
     res.redirect(row.originalUrl);
   });
 });
@@ -76,6 +88,7 @@ app.get('/qrcode/:shortCode', async (req, res) => {
     }
   });
 });
+
 
 db.run(`CREATE TABLE IF NOT EXISTS urls (originalUrl TEXT, shortCode TEXT, clickCount INT)`, (err) => {
   if (err) {
