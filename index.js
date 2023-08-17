@@ -45,9 +45,10 @@ app.post('/shorten', (req, res) => {
   });
 });
 
-app.get('/:shortCode', (req, res) => {
+app.get('/:shortCode', async (req, res) => {
   const shortCode = req.params.shortCode;
   const selectQuery = `SELECT originalUrl FROM urls WHERE shortCode = ?`;
+  
   db.get(selectQuery, [shortCode], (err, row) => {
     if (err) {
       return res.status(500).json({ error: 'Failed to retrieve data from database' });
@@ -90,7 +91,7 @@ app.get('/qrcode/:shortCode', async (req, res) => {
 });
 
 
-db.run(`CREATE TABLE IF NOT EXISTS urls (originalUrl TEXT, shortCode TEXT, clickCount INT)`, (err) => {
+db.run(`CREATE TABLE IF NOT EXISTS urls (originalUrl TEXT, shortCode TEXT, clickCount INT DEFAULT 0)`, (err) => {
   if (err) {
     console.error('Error creating table:', err);
   } else {
