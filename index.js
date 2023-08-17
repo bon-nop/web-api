@@ -33,16 +33,20 @@ app.get('/getAllUrls', (req, res) => {
 
 app.post('/shorten', (req, res) => {
   const originalUrl = req.body.originalUrl;
-  const shortCode = generateShortCode();
 
-  const insertQuery = `INSERT INTO urls (originalUrl, shortCode) VALUES (?, ?)`;
-  db.run(insertQuery, [originalUrl, shortCode], async (err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Failed to insert data into database' });
-    }
+  if (originalUrl !== '') {
+    const shortCode = generateShortCode();
+  
+    const insertQuery = `INSERT INTO urls (originalUrl, shortCode) VALUES (?, ?)`;
+    db.run(insertQuery, [originalUrl, shortCode], async (err) => {
+      if (err) {
+        return res.status(500).json({ error: 'Failed to insert data into database' });
+      }
+  
+      return res.status(200).json({ shortCode });
+    });
+  }
 
-    return res.status(200).json({ shortCode });
-  });
 });
 
 app.get('/:shortCode', async (req, res) => {
@@ -90,14 +94,14 @@ app.get('/qrcode/:shortCode', async (req, res) => {
   });
 });
 
-
-db.run(`CREATE TABLE IF NOT EXISTS urls (originalUrl TEXT, shortCode TEXT, clickCount INT DEFAULT 0)`, (err) => {
+db.run(`CREATE TABLE IF NOT EXISTS urls (id INTEGER PRIMARY KEY AUTOINCREMENT, originalUrl TEXT, shortCode TEXT, clickCount INT DEFAULT 0)`, (err) => {
   if (err) {
     console.error('Error creating table:', err);
   } else {
     console.log('Table created successfully');
   }
 });
+
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
